@@ -1,7 +1,7 @@
 # encoding=utf8
 from data_loader import build_dataset
 from batch_helper import BatchManager
-from data_utils import result_to_json
+from data_utils import result_to_json,test_ner
 from data_loader import prepare_dataset
 
 import torch
@@ -41,7 +41,7 @@ def train():
             
     else:
         
-        train_data,dev_data,test_data, char_to_id, tag_to_id,emb_matrix = build_dataset()
+        train_data,dev_data,test_data, char_to_id, tag_to_id, id_to_tag, emb_matrix = build_dataset()
         
     """ 2: 产生batch训练数据 """
     train_manager = BatchManager(train_data, config.batch_size)
@@ -70,7 +70,7 @@ def train():
             optimizer.zero_grad()
             
             """ 计算损失和反向传播 """
-            char_ids, seg_ids, tag_ids, mask = batch
+            _, char_ids, seg_ids, tag_ids, mask = batch
             loss = model.log_likelihood(char_ids,seg_ids,tag_ids, mask)
             loss.backward()
             
@@ -81,12 +81,12 @@ def train():
             if total_batch % config.steps_check == 0:
                 
                 model.eval()
-                dev_f1,dev_loss = evaluate(model,dev_manager)
+                dev_f1,dev_loss = evaluate(model, dev_manager, id_to_tag)
                 
                 """ 以f1作为early stop的监控指标 """
                 if dev_f1 > dev_best_f1:
                     
-                    evaluate(model, test_manager, test=True)
+                    evaluate(model, test_manager, id_to_tag, test=True)
                     dev_best_f1 = dev_f1
                     torch.save(model, os.path.join(config.save_dir,"medical_ner.ckpt"))
                     improve = '*'
@@ -95,14 +95,14 @@ def train():
                     improve = ''
                     
                 time_dif = get_time_dif(start_time)
-                msg = 'Iter: {} | Train Loss: {:.4f} | Dev Loss: {:.4f} | Dev F1-macro: {:.4f} | Time: {} | {}'
-                logger.info(msg.format(total_batch, loss.item(), dev_loss, dev_f1, time_dif, improve))  
+                msg = 'Iter: {} | Dev Loss: {:.4f} | Dev F1-macro: {:.4f} | Time: {} | {}'
+                logger.info(msg.format(total_batch, dev_loss, dev_f1, time_dif, improve))  
                 
                 model.train()
                 
             total_batch += 1
             if total_batch - last_improve > config.require_improve:
-                """ 验证集f1超过5000batch没下降，结束训练 """
+                """ 验证集f1超过5000batch没上升，结束训练 """
                 logger.info("No optimization for a long time, auto-stopping...")
                 flag = True
                 break
@@ -110,62 +110,85 @@ def train():
             break                
                 
 
-def evaluate(model, dev_manager, test=False):
-    
-    total_loss = 0
-    preds, labels = [], []
-    
+def evaluate_helper(model, data_manager, id_to_tag):
+
+         
     with torch.no_grad():
         
-        for index, batch in enumerate(dev_manager.iter_batch(shuffle=True)):
+        total_loss = 0
+        results = []
+        for batch in data_manager.iter_batch():
             
-            char_ids, seg_ids, tag_ids, mask = batch
-            predict = model(char_ids,seg_ids,mask)
-                    
+            chars, char_ids, seg_ids, tag_ids, mask = batch
+            
+            batch_paths = model(char_ids,seg_ids,mask)
             loss = model.log_likelihood(char_ids, seg_ids, tag_ids,mask)
-            total_loss += loss.item()
+            total_loss += loss.item()    
             
-            """ 统计非0的，也就是真实标签的长度 """
-            leng = [[j.item() for j in i if j.item() > 0] for i in tag_ids.cpu()]
+            """ 忽略<pad>标签，计算每个样本的真实长度 """
+            lengths = [len([j for j in i if j > 0]) for i in tag_ids.tolist()]
+            
+            tag_ids = tag_ids.tolist()
+            for i in range(len(chars)):
+                result = []
+                string = chars[i][:lengths[i]]
+                
+                """ 把id转换为标签 """
+                gold = [id_to_tag[int(x)] for x in tag_ids[i][:lengths[i]]]
+                pred = [id_to_tag[int(x)] for x in batch_paths[i][:lengths[i]]]               
+                
+                """ 用CoNLL-2000的实体识别评估脚本, 需要按其要求的格式保存结果，
+                即 字-真实标签-预测标签 用空格拼接"""
+                for char, gold, pred in zip(string, gold, pred):
+                    result.append(" ".join([char, gold, pred]))
+                results.append(result)
+        
+        aver_loss = total_loss / (data_manager.len_data * config.batch_size)        
+        return results, aver_loss  
     
-            for index, i in enumerate(predict):
-                preds += i[:len(leng[index])]
+
+def evaluate(model, data, id_to_tag, test=False):
     
-            for index, i in enumerate(tag_ids.tolist()):
-                labels += i[:len(leng[index])]
+    """ 得到预测的标签（非id）和损失 """
+    ner_results, aver_loss = evaluate_helper(model, data, id_to_tag)
+    
+    """ 用CoNLL-2000的实体识别评估脚本来计算F1值 """
+    eval_lines = test_ner(ner_results, config.save_dir)
+    
+    if test:
+        
+        """ 如果是测试，则打印评估结果 """
+        for line in eval_lines:
+            logger.info(line)
             
-        aver_loss = total_loss / (dev_manager.len_data * config.batch_size)
-           
-        f1 = f1_score(labels, preds, average='macro')
-            
-        if test:
-            report = classification_report(labels, preds)
-            print(report)
-            
-        return f1, aver_loss
+    f1 = float(eval_lines[1].strip().split()[-1]) / 100
+    
+    return f1, aver_loss
+
 
 def predict(input_str):
     
     with open(config.map_file, "rb") as f:
         char_to_id, id_to_char, tag_to_id, id_to_tag = pickle.load(f)
-        
-    model = torch.load(os.path.join(config.save_dir,"medical_ner_0.9723.ckpt"), 
-                       map_location="cpu")
+    
+    """ 用cpu预测 """
+    model = torch.load(os.path.join(config.save_dir,"medical_ner_f1_0.976.ckpt"), 
+                       map_location="cpu"
+    )
+    model.eval()
     
     if not input_str:
         input_str = input("请输入文本: ")    
     
-    char_ids, seg_ids, _ = prepare_dataset([input_str], char_to_id, tag_to_id, test=True)[0]
+    _, char_ids, seg_ids, _ = prepare_dataset([input_str], char_to_id, tag_to_id, test=True)[0]
     char_tensor = torch.LongTensor(char_ids).view(1,-1)
     seg_tensor = torch.LongTensor(seg_ids).view(1,-1)
     
-    """ 得到维特比解码后的路径，并转换为标签 """
-    paths = model(char_tensor,seg_tensor)    
-    tags = [id_to_tag[idx] for idx in paths[0]]
-    
-    """ 把开头和结尾的<start>,<end>标签去掉 """
-    tags.pop(0)
-    tags.pop(-1)
+    with torch.no_grad():
+        
+        """ 得到维特比解码后的路径，并转换为标签 """
+        paths = model(char_tensor,seg_tensor)    
+        tags = [id_to_tag[idx] for idx in paths[0]]
     
     pprint(result_to_json(input_str, tags))
 

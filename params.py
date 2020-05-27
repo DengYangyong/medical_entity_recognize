@@ -33,7 +33,7 @@ def params():
     
     add_arg("--clip", default=5, help="Gradient clip", type=float)
     add_arg("--dropout", default=0.5, help="Dropout rate", type=float)
-    add_arg("--batch_size", default=128, help="batch size", type=float)
+    add_arg("--batch_size", default=128, help="batch size", type=int)
     add_arg("--lr", default=0.003, help="Initial learning rate", type=float)
     add_arg("--weight_decay", default=1e-5, help="Learning rate decay", type=float)
     add_arg("--optimizer", default="adam", help="Optimizer for training",type=str)

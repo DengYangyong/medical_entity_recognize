@@ -34,8 +34,10 @@ class BatchManager(object):
     def pad_data(data):
         """
         构造一个mask矩阵，对pad进行mask，不参与loss的计算
+        另外，除了id以外，字本身，因为用CoNLL-2000的脚本评估时，需要。
         """
         
+        batch_chars = []
         batch_chars_idx = []
         batch_segs_idx = []
         batch_tags_idx = []
@@ -43,9 +45,12 @@ class BatchManager(object):
         
         max_length = max([len(sentence[0]) for sentence in data])
         for line in data:
-            chars_idx, segs_idx, tags_idx = line
+            chars, chars_idx, segs_idx, tags_idx = line
             
             padding = [0] * (max_length - len(chars_idx))
+            
+            """ CoNLL-2000的评估脚本需要"""
+            batch_chars.append(chars + padding)
             
             batch_chars_idx.append(chars_idx + padding)
             batch_segs_idx.append(segs_idx + padding)
@@ -57,7 +62,7 @@ class BatchManager(object):
         batch_tags_idx = torch.LongTensor(batch_tags_idx).to(device)
         batch_mask = torch.tensor(batch_mask,dtype=torch.uint8).to(device)
                
-        return [batch_chars_idx, batch_segs_idx, batch_tags_idx, batch_mask]
+        return [batch_chars, batch_chars_idx, batch_segs_idx, batch_tags_idx, batch_mask]
 
     def iter_batch(self, shuffle=True):
         

@@ -13,12 +13,19 @@ class NERLSTM_CRF(nn.Module):
         self.tagset_size = len(tag2id)
         
         """ pdding_idx=0，也就是让pad标记不更新 """
-        self.char_emb = nn.Embedding.from_pretrained(emb_matrix,freeze=False, padding_idx=0)
-        self.seg_emb = nn.Embedding(self.vocab_size, config.seg_dim, padding_idx=0)
+        self.char_emb = nn.Embedding.from_pretrained(
+            emb_matrix,freeze=False, padding_idx=0
+        )
+        self.seg_emb = nn.Embedding(
+            self.vocab_size, config.seg_dim, padding_idx=0
+        )
         self.emb_dim = config.char_dim + config.seg_dim
         
         self.dropout = nn.Dropout(config.dropout)
-        self.lstm = nn.LSTM(self.emb_dim, self.hidden_dim // 2, num_layers=1, bidirectional=True, batch_first=True)
+        self.lstm = nn.LSTM(
+            self.emb_dim, self.hidden_dim // 2, num_layers=1, 
+            bidirectional=True, batch_first=True
+        )
         
         """ 得到发射概率矩阵 """
         self.hidden2tag = nn.Linear(self.hidden_dim, self.tagset_size)
@@ -28,7 +35,9 @@ class NERLSTM_CRF(nn.Module):
     def forward(self, char_ids,seg_ids,mask=None):
         
         """ 把字向量（100维）和词长度特征向量（20维），拼接 """
-        embedding = torch.cat((self.char_emb(char_ids),self.seg_emb(seg_ids)), 2)
+        embedding = torch.cat(
+            (self.char_emb(char_ids),self.seg_emb(seg_ids)), 2
+        )
         
         outputs, hidden = self.lstm(embedding)
         outputs = self.dropout(outputs)
@@ -39,7 +48,9 @@ class NERLSTM_CRF(nn.Module):
 
     def log_likelihood(self, char_ids, seg_ids, tag_ids, mask=None):
         
-        embedding = torch.cat((self.char_emb(char_ids),self.seg_emb(seg_ids)), 2)
+        embedding = torch.cat(
+            (self.char_emb(char_ids),self.seg_emb(seg_ids)), 2
+        )
  
         outputs, hidden = self.lstm(embedding)
         outputs = self.dropout(outputs)

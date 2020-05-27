@@ -33,21 +33,26 @@
 
 ### 三：模型的效果
 
-模型在测试集上的F1值可达0.97，效果比较好。
+模型在测试集上的F1值可达0.976，效果比较好。
 
 ### 四：代码的优化点
 
-主要有以下4点，更详细的介绍看我的公众号：叫我NLPer，文章：BILSTM+CRF命名实体识别：达观杯败走记（上篇）。
+主要有以下4点，更详细的介绍看我的公众号：叫我NLPer，文章：BILSTM+CRF命名实体识别：达观杯败走记。
 
-1 在样本和标签前后加入了<start>和<end>标记
+1 样本和标签前后不需加入<start>和<end>标记，因为pytorch-crf这个包自动会加上这两个标记的转移概率
 2 加入了分词特征，做成20维的嵌入，和100维字向量拼接
 3 batch分桶，减少zero pad
 4 在计算loss时对pad进行mask
+5 用CoNLL-2000的评估脚本来评估，权威
 
 ### 五：参考代码
 
 BILSTM+CRF的模型主要参考了以下代码，感谢作者：
 
 https://github.com/Alic-yuan/nlp-beginner-finish
+
+CoNLL-2000的python版评估脚本来自：
+
+https://github.com/spyysalo/conlleval.py
 
 

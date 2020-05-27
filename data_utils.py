@@ -6,6 +6,7 @@ import random
 import numpy as np
 import jieba
 from logs.logger import logger
+from conlleval import return_report
 
 def create_dico(item_list):
     """
@@ -110,8 +111,7 @@ def char_mapping(sentences, lower):
     dico = create_dico(chars)
     dico["<pad>"] = 100000003
     dico['<unk>'] = 100000002
-    dico["<start>"] = 100000001
-    dico["<end>"] = 100000000
+    
     char_to_id, id_to_char = create_mapping(dico)
     logger.info("Found %i unique words (%i in total)" % (len(dico), sum(len(x) for x in chars)))
     
@@ -132,8 +132,7 @@ def tag_mapping(sentences):
     
     dico = create_dico(tags)
     dico["<pad>"] = 100000002
-    dico["<start>"] = 100000001
-    dico["<end>"] = 100000000
+
     tag_to_id, id_to_tag = create_mapping(dico)
     
     logger.info("Found %i unique named entity tags" % len(dico))
@@ -186,7 +185,27 @@ def get_seg_features(string):
     return seg_feature
 
 
+def test_ner(results, path):
+    """
+    用CoNLL-2000的实体识别评估脚本来评估模型
+    """
+    
+    """ 用CoNLL-2000的脚本，需要把预测结果保存为文件，再读取 """
+    output_file = os.path.join(path, "ner_predict.utf8")
+    with open(output_file, "w",encoding='utf8') as f:
+        to_write = []
+        for block in results:
+            for line in block:
+                to_write.append(line + "\n")
+            to_write.append("\n")
+
+        f.writelines(to_write)
+    eval_lines = return_report(output_file)
+    return eval_lines
+
+
 def result_to_json(string, tags):
+    """ 按规范的格式输出预测结果 """
     
     item = {"string": string, "entities": []}
     entity_name = ""

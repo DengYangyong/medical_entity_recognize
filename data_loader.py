@@ -70,7 +70,7 @@ def build_dataset():
         pickle.dump([char_to_id,id_to_char,tag_to_id,id_to_tag], f)
         pickle.dump(emb_matrix, f)
         
-    return train_data,dev_data,test_data, char_to_id, tag_to_id, emb_matrix
+    return train_data,dev_data,test_data, char_to_id, tag_to_id, id_to_tag, emb_matrix
     
 
 def load_sentences(path, lower, zero):
@@ -171,7 +171,9 @@ def prepare_dataset(sentences, char_to_id, tag_to_id, lower=False, test=False):
     
     """
     把文本型的样本和标签，转化为index，便于输入模型
-    需要在每个样本和标签前后加<start>和<end>
+    需要在每个样本和标签前后加<start>和<end>,
+    但由于pytorch-crf这个包里面会自动添加<start>和<end>的转移概率，
+    所以我们不用在手动加入。
     """
 
     def f(x): return x.lower() if lower else x
@@ -188,12 +190,6 @@ def prepare_dataset(sentences, char_to_id, tag_to_id, lower=False, test=False):
         """ 对句子分词，构造词的长度特征 """
         segs_idx = get_seg_features("".join(chars))
         
-        """ 每个样本前后加<start>和<end> """
-        chars_idx = [char_to_id["<start>"]] + chars_idx + [char_to_id["<end>"]]
-        segs_idx = [0] + segs_idx + [0]        
-        
-        """ 把标签转化为index, 标签前后加<start>和<end> """
-        tags = ["<start>"] + tags + ["<end>"]
         if not test:
             tags_idx =  [tag_to_id[t] for t in tags]
             
@@ -201,7 +197,7 @@ def prepare_dataset(sentences, char_to_id, tag_to_id, lower=False, test=False):
             tags_idx = [tag_to_id["<pad>"] for _ in tags]
             
         assert len(chars_idx) == len(segs_idx) == len(tags_idx)
-        data.append([chars_idx, segs_idx, tags_idx])
+        data.append([chars, chars_idx, segs_idx, tags_idx])
 
     return data
 
@@ -209,7 +205,7 @@ def prepare_dataset(sentences, char_to_id, tag_to_id, lower=False, test=False):
 def load_emb_matrix(vocab):
     
     """ 1: 加载百度百科词向量 """ 
-    print("\nLoading baidu baike word2vec ...\n")
+    print("\nLoading char2vec ...\n")
     emb_index = load_w2v(config.emb_file)
     
     """ 2: 词向量矩阵与词表相对应 """ 
