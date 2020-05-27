@@ -67,4 +67,12 @@ CoNLL-2000的python版评估脚本来自：
 
 https://github.com/spyysalo/conlleval.py
 
+### 六：项目文档
 
+《电子病历实体识别》为项目的说明文档
+
+### 七：待完成
+
+1 IDCNN+CRF的模型
+
+2 BERT+CRF的模型
