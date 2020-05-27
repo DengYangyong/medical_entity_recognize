@@ -104,8 +104,6 @@ def iobes_iob(tags):
 def char_mapping(sentences, lower):
     """
     建立字和id对应的字典，按频率降序排列
-    由于用了CRF，所以需要在句子前后加<start>和<end>
-    那么在字典中也加入这两个标记
     """
     chars = [[x[0].lower() if lower else x[0] for x in s] for s in sentences]
     dico = create_dico(chars)
@@ -122,7 +120,7 @@ def tag_mapping(sentences):
     """
     建立标签和id对应的字典，按频率降序排列
     由于用了CRF，所以需要在标签前后加<start>和<end>
-    那么在字典中也加入这两个标记
+    但是torchcrf那个包会自动处理，那么在字典中不用加入这两个标记
     """
     
     f = open('data/tag_to_id.txt','w',encoding='utf8')
