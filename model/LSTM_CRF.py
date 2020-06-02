@@ -9,6 +9,7 @@ class NERLSTM_CRF(nn.Module):
 
         self.hidden_dim = config.hidden_dim
         self.vocab_size = len(char2id)
+        self.seg_dize = 5
         self.tag_to_ix = tag2id
         self.tagset_size = len(tag2id)
         
@@ -17,7 +18,7 @@ class NERLSTM_CRF(nn.Module):
             emb_matrix,freeze=False, padding_idx=0
         )
         self.seg_emb = nn.Embedding(
-            self.vocab_size, config.seg_dim, padding_idx=0
+            self.seg_size, config.seg_dim, padding_idx=0
         )
         self.emb_dim = config.char_dim + config.seg_dim
         
@@ -27,7 +28,7 @@ class NERLSTM_CRF(nn.Module):
             bidirectional=True, batch_first=True
         )
         
-        """ 得到发射概率矩阵 """
+        """ 得到发射矩阵 """
         self.hidden2tag = nn.Linear(self.hidden_dim, self.tagset_size)
         
         self.crf = CRF(self.tagset_size,batch_first=True)

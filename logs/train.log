@@ -6769,3 +6769,36 @@
 2020-05-27 08:10:16,172 - main.py - evaluate - INFO -               TES: precision:   0.00%; recall:   0.00%; FB1:   0.00  8908
 
 2020-05-27 08:10:16,888 - main.py - train - INFO - Iter: 0 | Dev Loss: 163.2856 | Dev F1-macro: 0.0017 | Time: 0:00:58 | *
+2020-05-31 23:14:19,041 - logger.py - print_config - INFO - train          :	True
+2020-05-31 23:14:19,062 - logger.py - print_config - INFO - seg_dim        :	20
+2020-05-31 23:14:19,062 - logger.py - print_config - INFO - char_dim       :	100
+2020-05-31 23:14:19,063 - logger.py - print_config - INFO - hidden_dim     :	256
+2020-05-31 23:14:19,063 - logger.py - print_config - INFO - tag_schema     :	iobes
+2020-05-31 23:14:19,063 - logger.py - print_config - INFO - clip           :	5
+2020-05-31 23:14:19,063 - logger.py - print_config - INFO - dropout        :	0.5
+2020-05-31 23:14:19,064 - logger.py - print_config - INFO - batch_size     :	8
+2020-05-31 23:14:19,064 - logger.py - print_config - INFO - lr             :	0.003
+2020-05-31 23:14:19,064 - logger.py - print_config - INFO - weight_decay   :	1e-05
+2020-05-31 23:14:19,064 - logger.py - print_config - INFO - optimizer      :	adam
+2020-05-31 23:14:19,064 - logger.py - print_config - INFO - pre_emb        :	True
+2020-05-31 23:14:19,064 - logger.py - print_config - INFO - zero           :	True
+2020-05-31 23:14:19,064 - logger.py - print_config - INFO - lower          :	True
+2020-05-31 23:14:19,065 - logger.py - print_config - INFO - max_epoch      :	50
+2020-05-31 23:14:19,065 - logger.py - print_config - INFO - steps_check    :	100
+2020-05-31 23:14:19,065 - logger.py - print_config - INFO - save_dir       :	/home/dyy/medical_entity_recognize/result
+2020-05-31 23:14:19,065 - logger.py - print_config - INFO - log_file       :	train.log
+2020-05-31 23:14:19,065 - logger.py - print_config - INFO - map_file       :	/home/dyy/medical_entity_recognize/data/maps.pkl
+2020-05-31 23:14:19,065 - logger.py - print_config - INFO - data_proc_file :	/home/dyy/medical_entity_recognize/data/data_proc.pkl
+2020-05-31 23:14:19,065 - logger.py - print_config - INFO - emb_file       :	/home/dyy/medical_entity_recognize/data/vec.txt
+2020-05-31 23:14:19,065 - logger.py - print_config - INFO - train_file     :	/home/dyy/medical_entity_recognize/data/example.train
+2020-05-31 23:14:19,066 - logger.py - print_config - INFO - dev_file       :	/home/dyy/medical_entity_recognize/data/example.dev
+2020-05-31 23:14:19,066 - logger.py - print_config - INFO - test_file      :	/home/dyy/medical_entity_recognize/data/example.test
+2020-05-31 23:14:19,066 - logger.py - print_config - INFO - model_type     :	bilstm
+2020-05-31 23:14:19,066 - logger.py - print_config - INFO - require_improve:	5000
+2020-05-31 23:14:57,704 - data_loader.py - build_dataset - INFO - 成功读取标注好的数据
+2020-05-31 23:15:03,975 - data_loader.py - build_dataset - INFO - 成功将IOB格式转化为IOBES格式
+2020-05-31 23:15:06,770 - data_utils.py - char_mapping - INFO - Found 2615 unique words (4451527 in total)
+2020-05-31 23:15:06,849 - data_utils.py - augment_with_pretrained - INFO - Loading pretrained embeddings from /home/dyy/medical_entity_recognize/data/vec.txt...
+2020-05-31 23:15:08,400 - data_utils.py - tag_mapping - INFO - Found 52 unique named entity tags
+2020-05-31 23:15:08,429 - data_loader.py - build_dataset - INFO - 根据训练集建立字典完毕
+2020-05-31 23:15:08,686 - data_loader.py - build_dataset - INFO - 加载预训练的字向量完毕

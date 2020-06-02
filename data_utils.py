@@ -166,7 +166,7 @@ def augment_with_pretrained(dictionary, ext_emb_path):
 def get_seg_features(string):
     """
     对句子分词，构造词的长度特征，为BIES格式,
-    [对]对应的特征为[0],
+    [对]对应的特征为[4], 不设为0，因为pad的id就是0
     [句子]对应的特征为[1,3],
     [中华人民]对应的特征为[1,2,2,3]
     """
@@ -174,7 +174,7 @@ def get_seg_features(string):
 
     for word in jieba.cut(string):
         if len(word) == 1:
-            seg_feature.append(0)
+            seg_feature.append(4)
         else:
             tmp = [2] * len(word)
             tmp[0] = 1
