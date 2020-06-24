@@ -204,11 +204,11 @@ def prepare_dataset(sentences, char_to_id, tag_to_id, lower=False, test=False):
 """ 加载预训练字向量，并与词表相对应 """ 
 def load_emb_matrix(vocab):
     
-    """ 1: 加载百度百科词向量 """ 
+    """ 1: 加载字向量 """ 
     print("\nLoading char2vec ...\n")
     emb_index = load_w2v(config.emb_file)
     
-    """ 2: 词向量矩阵与词表相对应 """ 
+    """ 2: 字向量矩阵与词表相对应 """ 
     vocab_size = len(vocab)
     emb_matrix = np.zeros((vocab_size,config.char_dim))
     for word,index in vocab.items():
