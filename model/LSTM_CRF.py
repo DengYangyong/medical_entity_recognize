@@ -9,7 +9,7 @@ class NERLSTM_CRF(nn.Module):
 
         self.hidden_dim = config.hidden_dim
         self.vocab_size = len(char2id)
-        self.seg_dize = 5
+        self.seg_size = 5
         self.tag_to_ix = tag2id
         self.tagset_size = len(tag2id)
         
