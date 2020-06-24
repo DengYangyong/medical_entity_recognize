@@ -172,7 +172,7 @@ def predict(input_str):
         char_to_id, id_to_char, tag_to_id, id_to_tag = pickle.load(f)
     
     """ 用cpu预测 """
-    model = torch.load(os.path.join(config.save_dir,"medical_ner_f1_0.976.ckpt"), 
+    model = torch.load(os.path.join(config.save_dir,"medical_ner.ckpt"), 
                        map_location="cpu"
     )
     model.eval()
